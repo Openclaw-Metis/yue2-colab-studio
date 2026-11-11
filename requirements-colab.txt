@@ -1,0 +1,10 @@
+# Installed by notebook cell 1 on a Colab L4 runtime.
+#
+# yue2-infer pins torch==2.10.0, transformers==4.57.6, huggingface-hub==0.36.2
+# and numpy==2.2.6 exactly. Upstream is pinned to a commit, never a branch:
+# see docs/upgrading-yue2.md before changing the SHA.
+yue2-infer @ git+https://github.com/multimodal-art-projection/YuE.git@1116bea76032bee5668e5f097294d082fa0b84f0
+
+# Resolved against the pins above with `pip install --dry-run` on 2026-11-11
+# (Python 3.13, Windows). Not yet confirmed on a Colab L4 runtime.
+gradio==6.17.3
