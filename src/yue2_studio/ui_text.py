@@ -218,7 +218,12 @@ ENV_NO_GPU = "找不到 NVIDIA GPU。"
 ENV_GPU_TOO_OLD = "目前的 GPU 是 {name}，不支援 YuE2 需要的運算格式。"
 ENV_VRAM_TOO_SMALL = "目前的 GPU 記憶體是 {vram:.1f} GiB，至少需要 {need:.0f} GiB。"
 ENV_GPU_UNKNOWN = "無法判斷 GPU 型號（{name}）。"
-CELL_ONE_FIRST = "請先執行第一格，並確認看到「環境檢查通過」。"
+INSTALL_FAILED_STEP = "失敗的步驟：{step}"
+UNRELATED_CONFLICTS = (
+    "以下是 Colab 預裝套件的相依提醒，與本工具無關，可以忽略。"
+    "但同一個執行階段內請不要再使用這些套件（例如 fastai、timm、diffusers）："
+)
+CELL_ONE_FIRST ="請先執行第一格，並確認看到「環境檢查通過」。"
 CELL_TWO_FIRST = "請先執行第二格。"
 PASSCODE_NOTICE = "這次的登入帳號是 studio，通行碼是：{passcode}"
 WORKDIR_NOTICE = "歌曲會保存在：{workdir}"

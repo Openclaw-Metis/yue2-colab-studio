@@ -30,7 +30,7 @@ def cell_one(
     repo_dir: str,
     *,
     probe: Callable[[], environment.EnvironmentReport] = environment.probe,
-    install: Callable[[str], list[installer.StepTiming]] = installer.install,
+    install: Callable[[str], installer.InstallReport] = installer.install,
     verify: Callable[[], str] = installer.verify_imports,
     marker: Path = ENV_MARKER,
     out: Callable[[str], None] = print,
@@ -46,15 +46,27 @@ def cell_one(
         raise SystemExit("E_ENV_GPU")
 
     out("\n正在安裝套件，需要幾分鐘……")
+    failure = None
     try:
-        timings = install(str(Path(repo_dir) / "requirements-colab.txt"))
+        installed = install(str(Path(repo_dir) / "requirements-colab.txt"))
         versions = verify()
-    except installer.InstallFailed as failure:
+    except installer.InstallFailed as error:
+        failure = error
+    if failure is not None:
         out(ui_text.ERRORS["E_ENV_INSTALL"])
+        out(ui_text.INSTALL_FAILED_STEP.format(step=failure.step))
         out(failure.tail)
-        raise SystemExit("E_ENV_INSTALL") from failure
+        # Raised outside the except block on purpose: Colab's IPython 7.34 on
+        # Python 3.13 crashes while rendering a chained exception
+        # ("'tuple' object has no attribute 'f_lineno'").
+        raise SystemExit("E_ENV_INSTALL")
 
-    for timing in timings:
+    if installed.unrelated_conflicts:
+        out("\n" + ui_text.UNRELATED_CONFLICTS)
+        for line in installed.unrelated_conflicts:
+            out("  " + line)
+        out("")
+    for timing in installed.timings:
         out(f"{timing.name:<10} {timing.seconds:6.1f} 秒")
     out(versions)
     marker.parent.mkdir(parents=True, exist_ok=True)

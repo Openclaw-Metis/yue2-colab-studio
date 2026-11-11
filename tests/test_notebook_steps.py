@@ -32,7 +32,7 @@ def test_cell_one_installs_and_writes_marker_on_l4(tmp_path):
 
     def install(path):
         seen.append(path)
-        return [installer.StepTiming("install", 1.5)]
+        return installer.InstallReport([installer.StepTiming("install", 1.5)])
 
     report = notebook_steps.cell_one(
         str(tmp_path),
@@ -65,8 +65,33 @@ def test_cell_one_reports_install_failure(tmp_path):
             out=lines.append,
         )
     assert caught.value.code == "E_ENV_INSTALL"
+    # Colab's IPython 7.34 on Python 3.13 crashes rendering chained exceptions.
+    assert caught.value.__cause__ is None and caught.value.__context__ is None
     assert ui_text.ERRORS["E_ENV_INSTALL"] in lines
+    assert ui_text.INSTALL_FAILED_STEP.format(step="install") in lines
     assert not (tmp_path / "env.json").exists()
+
+
+def test_cell_one_lists_unrelated_conflicts_and_still_passes(tmp_path):
+    lines = []
+
+    def install(path):
+        return installer.InstallReport(
+            [installer.StepTiming("check", 0.5)],
+            ["fastai 2.8.12 requires torchvision, which is not installed."],
+        )
+
+    notebook_steps.cell_one(
+        str(tmp_path),
+        probe=lambda: L4,
+        install=install,
+        verify=lambda: "torch 2.10.0",
+        marker=tmp_path / "env.json",
+        out=lines.append,
+    )
+    assert ui_text.UNRELATED_CONFLICTS in "\n".join(lines)
+    assert "  fastai 2.8.12 requires torchvision, which is not installed." in lines
+    assert lines[-1].strip() == ui_text.ENV_OK
 
 
 def test_cell_two_requires_cell_one(tmp_path):

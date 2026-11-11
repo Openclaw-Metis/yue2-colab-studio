@@ -12,6 +12,15 @@
 | 生成時間未知 | 官方沒有 L4 數據 | `colab-baseline.md` 量測後回填。逾時門檻 45 分鐘是暫定值 |
 | `nvidia-smi --query-gpu=compute_cap` 在 Colab 的驅動是否可用未確認 | 欄位需要較新的驅動 | 失敗時會退回以 GPU 名稱判斷（L4、A100、T4 等已知型號） |
 
+## Colab L4 上已觀察到的狀況（2026-11-12，使用者回報）
+
+| 現象 | 原因 | 處理 |
+|---|---|---|
+| 0.1.0 第一格在 `pip check` 失敗 | 檢查整個環境，Colab 預裝套件之間的衝突也會讓它失敗 | 0.1.1 起只有本工具依賴樹（yue2-infer 與 gradio 及其相依）內的衝突才會擋下，其餘列為提醒 |
+| 安裝後 fastai、timm、diffusers 等預裝套件無法正常使用 | 刻意移除 torchvision、torchaudio，並把 huggingface-hub 降到 YuE2 釘死的 0.36.2 | 同一個執行階段內不要再使用這些套件 |
+| 第一格失敗時出現 `'tuple' object has no attribute 'f_lineno'` 等一大串錯誤 | Colab 的 IPython 7.34 在 Python 3.13 上顯示「串接的例外」時自己出錯 | 0.1.1 起第一格失敗時不再串接例外，只顯示中文說明與失敗的步驟 |
+| Colab 預設 Python 是 3.13.16 | YuE2 官方文件以 Python 3.12 為準 | `yue2-infer` 要求 3.10 以上，安裝成功；是否影響生成尚待實測 |
+
 ## Colab 本身的限制
 
 | 現象 | 原因 | 暫時作法 |

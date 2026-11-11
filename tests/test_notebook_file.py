@@ -35,6 +35,9 @@ def test_notebook_is_valid_and_has_three_code_cells():
     assert "notebook_steps.cell_three(" in code[2].source
     # Cell 1 runs before anything is installed.
     assert "import torch" not in code[0].source
+    # Rerunning cell 1 must pick up a newer revision and drop cached modules.
+    assert '"fetch", "--depth", "1", "origin", REVISION' in code[0].source
+    assert "del sys.modules[_name]" in code[0].source
 
 
 def test_requirements_pin_the_same_commit_as_the_package():

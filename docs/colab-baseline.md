@@ -14,12 +14,12 @@ cd /content/yue2-colab-studio && PYTHONPATH=src python scripts/colab_smoke.py --
 
 | 項目 | 數值 | 量測日期 |
 |---|---|---|
-| GPU 名稱 | 尚未量測 | |
-| GPU 記憶體（GiB） | 尚未量測 | |
-| 主機記憶體（GiB） | 尚未量測 | |
-| Python 版本 | 尚未量測 | |
+| GPU 名稱 | NVIDIA L4（運算能力等級 8.9） | 2026-11-12，使用者回報 |
+| GPU 記憶體（GiB） | 22.5 | 2026-11-12，使用者回報 |
+| 主機記憶體（GiB） | 53.0 | 2026-11-12，使用者回報 |
+| Python 版本 | 3.13.16 | 2026-11-12，使用者回報 |
 | torch / yue2 / gradio 版本 | 尚未量測 | |
-| `pip check` 結果 | 尚未量測 | |
+| `pip check` 結果 | 安裝成功，但 Colab 預裝套件出現 6 條衝突（fastai、timm 需要 torchvision；diffusers 需要較新的 huggingface-hub 與 safetensors；cuda-python 與 cuda-bindings 版本不符；ipython 缺 jedi）。0.1.0 因此停在第一格；0.1.1 改為只擋本工具依賴樹內的衝突 | 2026-11-12，使用者回報 |
 
 ## 啟動耗時
 

@@ -43,12 +43,19 @@ import os, subprocess, sys
 
 REPO_URL = "{REPO_URL}"
 REPO_DIR = "/content/yue2-colab-studio"
-if not os.path.isdir(REPO_DIR):
+if os.path.isdir(REPO_DIR):
+    # Rerunning this cell picks up fixes published since the first run.
+    subprocess.run(["git", "-C", REPO_DIR, "fetch", "--depth", "1", "origin", REVISION], check=True)
+    subprocess.run(["git", "-C", REPO_DIR, "reset", "--hard", "-q", "FETCH_HEAD"], check=True)
+else:
     subprocess.run(
         ["git", "clone", "--depth", "1", "--branch", REVISION, REPO_URL, REPO_DIR], check=True
     )
 if REPO_DIR + "/src" not in sys.path:
     sys.path.insert(0, REPO_DIR + "/src")
+for _name in [n for n in sys.modules if n == "yue2_studio" or n.startswith("yue2_studio.")]:
+    del sys.modules[_name]
+subprocess.run(["git", "-C", REPO_DIR, "log", "-1", "--format=版本 %h %cd", "--date=short"])
 
 from yue2_studio import notebook_steps
 
