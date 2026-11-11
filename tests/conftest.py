@@ -31,12 +31,23 @@ class Studio:
             read_peak_vram_gib=lambda: 11.5,
             empty_cache=lambda: None,
         )
-        self.store = SongStore(root)
+        self.mp3_calls = []
+        self.store = SongStore(root, mp3_converter=self._fake_mp3)
         self.log = EventLog(root / "logs" / "app.log")
         runner_kwargs.setdefault("poll_seconds", 0.005)
         self.runner = JobRunner(
             self.engine, self.store, self.log, versions={"studio": "test"}, **runner_kwargs
         )
+
+    # Set to an exception to make MP3 encoding fail.
+    mp3_error = None
+
+    def _fake_mp3(self, source, target, *, title=None):
+        """Stands in for ffmpeg so the suite stays fast; test_audio_export runs the real one."""
+        self.mp3_calls.append((source, target, title))
+        if self.mp3_error is not None:
+            raise self.mp3_error
+        target.write_bytes(b"ID3\x03\x00\x00\x00\x00\x00\x00stand-in")
 
     def events(self, name=None):
         records = self.log.recent(200)

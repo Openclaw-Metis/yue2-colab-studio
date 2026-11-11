@@ -110,6 +110,7 @@ def build_app(studio: Studio) -> gr.Blocks:
                     )
                     with gr.Row():
                         c["download_btn"] = gr.DownloadButton(ui_text.BTN_DOWNLOAD_AUDIO)
+                        c["download_mp3_btn"] = gr.DownloadButton(ui_text.BTN_DOWNLOAD_MP3)
                         c["pack_btn"] = gr.Button(ui_text.BTN_PACK)
                         c["remix_btn"] = gr.Button(ui_text.BTN_REMIX, variant="primary")
                     c["pack_file"] = gr.File(
@@ -150,6 +151,9 @@ def build_app(studio: Studio) -> gr.Blocks:
                         c["load_btn"] = gr.Button(ui_text.BTN_LOAD_TO_FORM, variant="primary")
                         detail_pack_btn = gr.Button(ui_text.BTN_PACK)
                         delete_btn = gr.Button(ui_text.BTN_DELETE)
+                    with gr.Row():
+                        c["detail_audio_btn"] = gr.DownloadButton(ui_text.BTN_DOWNLOAD_AUDIO)
+                        c["detail_mp3_btn"] = gr.DownloadButton(ui_text.BTN_DOWNLOAD_MP3)
                     c["delete_confirm_btn"] = gr.Button(
                         ui_text.BTN_DELETE_CONFIRM, variant="stop", visible=False
                     )
@@ -281,8 +285,8 @@ def build_app(studio: Studio) -> gr.Blocks:
         c["pack_btn"].click(bind(studio.pack), c["result_song_state"], outputs, **quiet)
         c["remix_btn"].click(bind(studio.load_to_form), c["result_song_state"], outputs, **quiet)
 
-        library_tab.select(bind(studio.refresh_library), None, outputs, **quiet)
-        refresh_btn.click(bind(studio.refresh_library), None, outputs, **quiet)
+        library_tab.select(bind(studio.refresh_library), c["library_radio"], outputs, **quiet)
+        refresh_btn.click(bind(studio.refresh_library), c["library_radio"], outputs, **quiet)
 
         c["library_radio"].change(bind(studio.select_song), c["library_radio"], outputs, **quiet)
         save_meta_btn.click(

@@ -2,6 +2,7 @@
 
     songs/<song_id>/studio.json      this studio's record
     songs/<song_id>/artifacts/       everything YuE2's save_artifacts() writes
+    songs/<song_id>/<song_id>.mp3    MP3 copy of the audio for easy sharing
 
 A song is written to a hidden temporary folder and renamed into place, so a
 failed save never leaves a half-written song in the library.
@@ -21,7 +22,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from . import ui_text
+from . import audio_export, ui_text
 from .request_rules import StudioRequest
 
 SCHEMA_VERSION = 1
@@ -110,12 +111,19 @@ def _json_safe(value: Any) -> Any:
 
 
 class SongStore:
-    def __init__(self, root: str | Path, *, now: Callable[[], datetime] | None = None):
+    def __init__(
+        self,
+        root: str | Path,
+        *,
+        now: Callable[[], datetime] | None = None,
+        mp3_converter: Callable[..., None] = audio_export.flac_to_mp3,
+    ):
         self.root = Path(root)
         self.songs_dir = self.root / "songs"
         self.exports_dir = self.root / "exports"
         self.rescue_dir = self.root / "_rescue"
         self._now = now or (lambda: datetime.now(timezone.utc))
+        self._mp3_converter = mp3_converter
 
     # --- identifiers and paths ------------------------------------------------
 
@@ -135,6 +143,33 @@ class SongStore:
 
     def audio_path(self, song_id: str) -> Path:
         return self._song_dir(song_id) / "artifacts" / "audio.flac"
+
+    def mp3_path(self, song_id: str) -> Path:
+        """Kept beside studio.json, not in artifacts/: YuE2's receipt hashes cover that folder."""
+        return self._song_dir(song_id) / f"{song_id}.mp3"
+
+    def has_mp3(self, song_id: str) -> bool:
+        return self.mp3_path(song_id).is_file()
+
+    def make_mp3(self, song_id: str) -> Path:
+        """Encode the song's FLAC as MP3 once; later calls reuse the file."""
+        record = self.get(song_id)
+        if not record.playable:
+            raise SongNotFound(song_id)
+        target = self.mp3_path(song_id)
+        if target.is_file():
+            return target
+        temporary = target.with_name(f".{target.name}.tmp")
+        try:
+            self._mp3_converter(self.audio_path(song_id), temporary, title=record.title)
+            temporary.replace(target)
+        except OSError as error:
+            temporary.unlink(missing_ok=True)
+            raise StorageError(f"{type(error).__name__}: {error}") from error
+        except Exception:
+            temporary.unlink(missing_ok=True)
+            raise
+        return target
 
     def score_text(self, song_id: str) -> str | None:
         path = self._song_dir(song_id) / "artifacts" / "score.abc"

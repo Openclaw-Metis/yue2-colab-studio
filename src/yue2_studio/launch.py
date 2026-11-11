@@ -70,12 +70,29 @@ def build_studio(workdir: Path, *, stand_in: bool, persistent: bool) -> Studio:
     )
 
 
+def login_for(share: bool, passcode: str | None, no_passcode: bool) -> tuple[str, str] | None:
+    """Gradio auth for this launch.
+
+    A public link without a passcode lets anyone holding it spend the owner's
+    compute units and write to their storage, so it has to be an explicit
+    choice: cell 2 passes --no-passcode when USE_PASSCODE is off.
+    """
+    if passcode:
+        return (LOGIN_USER, passcode)
+    if share and not no_passcode:
+        raise SystemExit("--share needs YUE2_STUDIO_PASSCODE or --no-passcode")
+    return None
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--workdir", required=True)
     parser.add_argument("--share", action="store_true", help="open a public gradio.live link")
     parser.add_argument("--persistent", action="store_true", help="workdir survives the runtime")
     parser.add_argument("--stand-in", action="store_true", help="use the GPU-free stand-in engine")
+    parser.add_argument(
+        "--no-passcode", action="store_true", help="allow --share without a login screen"
+    )
     parser.add_argument("--port", type=int, default=None)
     args = parser.parse_args()
 
@@ -86,17 +103,13 @@ def main() -> None:
     from .theme import CSS, FORCE_LIGHT_HEAD, build_theme
 
     studio = build_studio(workdir, stand_in=args.stand_in, persistent=args.persistent)
-    passcode = os.environ.get("YUE2_STUDIO_PASSCODE")
-    if args.share and not passcode:
-        # A public link without a passcode lets anyone spend the owner's
-        # compute units and write to their storage.
-        raise SystemExit("--share requires YUE2_STUDIO_PASSCODE")
+    auth = login_for(args.share, os.environ.get("YUE2_STUDIO_PASSCODE"), args.no_passcode)
 
     demo = build_app(studio)
     demo.queue(default_concurrency_limit=8)
     demo.launch(
         share=args.share,
-        auth=(LOGIN_USER, passcode) if passcode else None,
+        auth=auth,
         server_port=args.port,
         allowed_paths=[str(workdir)],
         theme=build_theme(),

@@ -20,7 +20,7 @@ jobs:
       # on the stand-in pipeline.
       - name: Install
         run: |
-          sudo apt-get update && sudo apt-get install -y libsndfile1
+          sudo apt-get update && sudo apt-get install -y libsndfile1 ffmpeg
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"
       - name: Lint

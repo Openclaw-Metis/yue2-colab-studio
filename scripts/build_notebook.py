@@ -63,25 +63,29 @@ notebook_steps.cell_one(REPO_DIR)
 """
 
 CELL_TWO_NOTE = """\
-## 第二格：選擇保存位置
+## 第二格：選擇保存位置與登入方式
 
 勾選 `USE_DRIVE` 會把歌曲存到你的 Google 雲端硬碟（`我的雲端硬碟/YuE2-Studio`），
 下次開新的執行階段還找得到。不勾選的話，歌曲只存在這次的執行階段。
 
-這一格會顯示本次專用的通行碼，登入介面時需要。
+`USE_PASSCODE` 預設不勾選：打開連結就能直接使用，不用登入。
+但連結是公開的，任何拿到連結的人都能用你的運算單元、改動你的歌曲庫，請不要分享。
+要把連結給別人時，請勾選 `USE_PASSCODE`，這一格會顯示本次專用的通行碼。
 """
 
 CELL_TWO = """\
-#@title 2. 選擇保存位置 { display-mode: "form" }
+#@title 2. 選擇保存位置與登入方式 { display-mode: "form" }
 USE_DRIVE = False  #@param {type:"boolean"}
+USE_PASSCODE = False  #@param {type:"boolean"}
 
-session = notebook_steps.cell_two(USE_DRIVE)
+session = notebook_steps.cell_two(USE_DRIVE, USE_PASSCODE)
 """
 
 CELL_THREE_NOTE = """\
 ## 第三格：啟動介面
 
-出現 `https://....gradio.live` 的連結後點開，帳號輸入 `studio`，密碼輸入第二格顯示的通行碼。
+出現 `https://....gradio.live` 的連結後點開即可使用。
+若第二格勾選了 `USE_PASSCODE`，帳號輸入 `studio`，密碼輸入第二格顯示的通行碼。
 這一格會一直執行，直到你中斷它。第一次生成歌曲時會下載作曲引擎，需要多等一段時間。
 """
 

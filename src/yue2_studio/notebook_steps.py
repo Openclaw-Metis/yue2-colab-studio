@@ -84,6 +84,7 @@ def make_passcode() -> str:
 
 def cell_two(
     use_drive: bool,
+    use_passcode: bool = False,
     *,
     mount_drive: Callable[[str], None] | None = None,
     marker: Path = ENV_MARKER,
@@ -92,7 +93,7 @@ def cell_two(
     drive_workdir: str = DRIVE_WORKDIR,
     out: Callable[[str], None] = print,
 ) -> dict:
-    """Pick where songs are kept and mint this session's passcode."""
+    """Pick where songs are kept and, when asked for, mint a session passcode."""
     if not marker.exists():
         out(ui_text.CELL_ONE_FIRST)
         raise SystemExit("E_ENV_GPU")
@@ -108,13 +109,34 @@ def cell_two(
         workdir = local_workdir
     Path(workdir).mkdir(parents=True, exist_ok=True)
 
-    session = {"workdir": workdir, "use_drive": bool(use_drive), "passcode": make_passcode()}
+    session = {
+        "workdir": workdir,
+        "use_drive": bool(use_drive),
+        "passcode": make_passcode() if use_passcode else None,
+    }
     session_file.write_text(json.dumps(session, ensure_ascii=False), encoding="utf-8")
     out(ui_text.WORKDIR_NOTICE.format(workdir=workdir))
     if not use_drive:
         out(ui_text.EPHEMERAL_WARNING)
-    out(ui_text.PASSCODE_NOTICE.format(passcode=session["passcode"]))
+    if session["passcode"]:
+        out(ui_text.PASSCODE_NOTICE.format(passcode=session["passcode"]))
+    else:
+        out(ui_text.NO_PASSCODE_WARNING)
     return session
+
+
+def launch_command(session: dict, repo_dir: str, python: str = sys.executable):
+    """Command line and extra environment for the studio server process."""
+    command = [python, "-m", "yue2_studio.launch", "--share", "--workdir", session["workdir"]]
+    if session.get("use_drive"):
+        command.append("--persistent")
+    env = {"PYTHONPATH": str(Path(repo_dir) / "src"), "PYTHONUNBUFFERED": "1"}
+    if session.get("passcode"):
+        env["YUE2_STUDIO_PASSCODE"] = session["passcode"]
+    else:
+        # The owner chose a link without a login (USE_PASSCODE off in cell 2).
+        command.append("--no-passcode")
+    return command, env
 
 
 def cell_three(
@@ -134,15 +156,11 @@ def cell_three(
         raise SystemExit("E_ENV_GPU")
     session = json.loads(session_file.read_text(encoding="utf-8"))
 
+    command, extra = launch_command(session, repo_dir)
     env = dict(os.environ)
-    source = str(Path(repo_dir) / "src")
-    env["PYTHONPATH"] = source + os.pathsep + env.get("PYTHONPATH", "")
-    env["YUE2_STUDIO_PASSCODE"] = session["passcode"]
-    env["PYTHONUNBUFFERED"] = "1"
-    command = [sys.executable, "-m", "yue2_studio.launch", "--share"]
-    command += ["--workdir", session["workdir"]]
-    if session.get("use_drive"):
-        command.append("--persistent")
+    env.pop("YUE2_STUDIO_PASSCODE", None)
+    env.update(extra)
+    env["PYTHONPATH"] = extra["PYTHONPATH"] + os.pathsep + os.environ.get("PYTHONPATH", "")
 
     out(ui_text.LAUNCHING)
     process = subprocess.Popen(

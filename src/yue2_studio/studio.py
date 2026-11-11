@@ -41,6 +41,11 @@ FORM_FIELDS = (
 )
 DEFAULT_CFG = 1.0
 COT_LABELS = {value: label.split("（")[0] for label, value in ui_text.COT_CHOICES}
+# The MP3 download button in each place a song can be shown. It stays visible
+# and is only enabled or disabled: in browser testing (2026-11-12) Gradio 6.17.3
+# lost track of buttons that were shown and hidden repeatedly inside a Column
+# that is itself shown and hidden, and then ignored further visibility updates.
+MP3_BUTTONS = {"result": "download_mp3_btn", "library": "detail_mp3_btn"}
 
 
 def as_form(*values) -> dict:
@@ -424,6 +429,31 @@ class Studio:
             "result_score_acc": {"visible": score is not None},
             "result_score": {"value": score or ""},
             "result_song_state": {"value": record.song_id},
+            **self._mp3_download(record.song_id, MP3_BUTTONS["result"]),
+        }
+
+    def _mp3_download(self, song_id: str | None, button: str) -> Patch:
+        """Point the MP3 button at the song's MP3, encoding it first if needed.
+
+        Songs saved before MP3 export existed, or whose encode failed during
+        the job, are encoded here the first time they are shown; the file is
+        then reused. If encoding is impossible the button stays visible but
+        disabled.
+        """
+        path = None
+        if song_id:
+            try:
+                path = self.store.make_mp3(song_id)
+            except Exception as error:
+                self.log.write(
+                    "mp3_failed", song_id=song_id, detail=f"{type(error).__name__}: {error}"[:300]
+                )
+        return {
+            button: {
+                "value": str(path) if path else None,
+                "interactive": path is not None,
+                "label": ui_text.BTN_DOWNLOAD_MP3 if path else ui_text.MP3_UNAVAILABLE,
+            }
         }
 
     def _find(self, song_id: str | None) -> SongRecord | None:
@@ -490,9 +520,10 @@ class Studio:
             "library_empty_md": {"visible": not choices},
         }
 
-    def refresh_library(self) -> Patch:
-        patch = self._library()
-        patch.update(self._detail(None))
+    def refresh_library(self, selected: str | None = None) -> Patch:
+        """Reload the list, keeping the open song open if it still exists."""
+        patch = self._library(selected)
+        patch.update(self._detail(self._find(selected)))
         return patch
 
     def _detail(self, record: SongRecord | None) -> Patch:
@@ -507,15 +538,28 @@ class Studio:
             "detail_group": {"visible": True},
             "selected_song_state": {"value": record.song_id},
             "detail_audio": {"value": audio, "visible": record.playable},
+            "detail_audio_btn": {"value": audio, "interactive": record.playable},
             "detail_parent_md": {"value": parent, "visible": bool(parent)},
             "title_box": {"value": record.title},
             "note_box": {"value": record.note},
             "load_btn": {"interactive": bool(record.request)},
             "detail_pack_file": {"value": None, "visible": False},
             "delete_confirm_btn": {"visible": False},
+            **self._mp3_download(
+                record.song_id if record.playable else None, MP3_BUTTONS["library"]
+            ),
         }
 
     def select_song(self, song_id: str | None) -> Patch:
+        """The library radio changed.
+
+        Gradio 6 also fires .change when a handler resets the radio, and on a
+        first visit to the tab that reset can arrive after the user's own
+        pick. An empty value therefore changes nothing; refresh_library and
+        delete_confirm hide the detail themselves when they mean to.
+        """
+        if not song_id:
+            return {}
         return self._detail(self._find(song_id))
 
     def save_meta(self, song_id: str | None, title: str, note: str) -> Patch:

@@ -117,8 +117,54 @@ def test_cell_two_local_storage_warns_about_losing_songs(tmp_path):
     )
     assert (tmp_path / "data").is_dir()
     assert ui_text.EPHEMERAL_WARNING in lines
-    assert len(session["passcode"]) == notebook_steps.PASSCODE_LENGTH
+    # No login by default (user's choice, 2026-11-12), with a warning instead.
+    assert session["passcode"] is None
+    assert ui_text.NO_PASSCODE_WARNING in lines
     assert json.loads((tmp_path / "session.json").read_text(encoding="utf-8")) == session
+
+
+def test_cell_two_with_passcode_prints_it(tmp_path):
+    marker = tmp_path / "env.json"
+    marker.write_text("{}", encoding="utf-8")
+    lines = []
+    session = notebook_steps.cell_two(
+        False,
+        True,
+        marker=marker,
+        session_file=tmp_path / "session.json",
+        local_workdir=str(tmp_path / "data"),
+        out=lines.append,
+    )
+    assert len(session["passcode"]) == notebook_steps.PASSCODE_LENGTH
+    assert ui_text.PASSCODE_NOTICE.format(passcode=session["passcode"]) in lines
+    assert ui_text.NO_PASSCODE_WARNING not in lines
+
+
+def test_launch_command_without_passcode_opts_out_explicitly():
+    session = {"workdir": "/w", "use_drive": False, "passcode": None}
+    command, env = notebook_steps.launch_command(session, "/repo", python="py")
+    assert command == [
+        "py", "-m", "yue2_studio.launch", "--share", "--workdir", "/w", "--no-passcode"
+    ]
+    assert "YUE2_STUDIO_PASSCODE" not in env
+    assert env["PYTHONPATH"].replace("\\", "/") == "/repo/src"
+
+
+def test_launch_command_with_passcode_and_drive():
+    session = {"workdir": "/d", "use_drive": True, "passcode": "abc123"}
+    command, env = notebook_steps.launch_command(session, "/repo", python="py")
+    assert "--persistent" in command and "--no-passcode" not in command
+    assert env["YUE2_STUDIO_PASSCODE"] == "abc123"
+
+
+def test_launch_refuses_a_public_link_without_a_choice():
+    from yue2_studio.launch import LOGIN_USER, login_for
+
+    with pytest.raises(SystemExit):
+        login_for(share=True, passcode=None, no_passcode=False)
+    assert login_for(share=True, passcode=None, no_passcode=True) is None
+    assert login_for(share=True, passcode="p", no_passcode=True) == (LOGIN_USER, "p")
+    assert login_for(share=False, passcode=None, no_passcode=False) is None
 
 
 def test_cell_two_drive_mounts_and_uses_drive_folder(tmp_path):

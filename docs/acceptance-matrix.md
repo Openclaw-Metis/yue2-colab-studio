@@ -11,8 +11,8 @@
 | 編號 | 條件摘要 | 自動測試 | 狀態 |
 |---|---|---|---|
 | AC-01 | T4 在第一格被擋下 | `test_notebook_steps.py::test_cell_one_stops_before_installing_on_t4`、`test_environment.py::test_t4_fails_on_capability_and_memory`、`test_regression_flows.py::test_scenario_unsupported_runtime` | 邏輯自動測試通過；待 L4／T4 實測 |
-| AC-02 | 全新 L4 依序執行三格即可開啟介面 | 無 | 待 L4 實測 |
-| AC-03 | 官方範例生成可播放的 48 kHz 立體聲 FLAC | 無 | 待 L4 實測 |
+| AC-02 | 全新 L4 依序執行三格即可開啟介面 | 無 | 使用者回報通過（2026-11-12，0.1.1） |
+| AC-03 | 官方範例生成可播放的 48 kHz 立體聲 FLAC | 無 | 使用者回報生成成功（2026-11-12，0.1.1）；取樣率與聲道未由檔案確認 |
 | AC-04 | 峰值 VRAM 低於 20 GiB，連續 5 次無 OOM | 無 | 待 L4 實測 |
 | AC-05 | 狀態列出現三個階段，更新間隔不超過 2 秒 | `test_app_flows.py::test_status_bar_shows_each_stage`、`test_engine.py::test_stage_events_follow_the_pipeline_order` | 階段順序自動測試通過；本機瀏覽器實測；真實間隔待 L4 實測 |
 | AC-06 | 取消後 30 秒內恢復，歌曲庫無新增 | `test_generation_job.py::test_cancel_during_composing`、`test_regression_flows.py::test_scenario_cancel_while_composing` | 自動測試通過；本機瀏覽器實測；真實模型的取消延遲待 L4 實測 |
@@ -21,7 +21,9 @@
 | AC-09 | 改名立即更新；刪除後資料夾不存在 | `test_song_store.py::test_update_title_and_note`、`test_delete_removes_the_folder`、`test_app_flows.py::test_select_and_rename`、`test_delete_is_two_steps` | 自動測試通過 |
 | AC-10 | 上傳規則 | `test_request_rules.py::test_bad_uploads_are_rejected`、`test_app_flows.py::test_upload_shows_the_file_as_a_preview`、`test_rejected_upload_leaves_the_editor_alone` | 自動測試通過 |
 | AC-11 | 生成中再次送出收到 E_BUSY | `test_generation_job.py::test_second_request_is_rejected_while_one_runs`、`test_edge_cases.py::test_double_click_starts_only_one_job` | 自動測試通過 |
-| AC-12 | 沒有通行碼無法進入 | 無（由 Gradio 的 `auth` 提供；`launch.py` 在 `--share` 且沒有通行碼時拒絕啟動） | 待 L4 實測 |
+| AC-12 | 勾選 `USE_PASSCODE` 時，沒有通行碼無法進入（0.2.0 起通行碼為選用，預設關閉，使用者決定） | `test_notebook_steps.py::test_cell_two_with_passcode_prints_it`、`test_launch_command_*`、`test_launch_refuses_a_public_link_without_a_choice` | 指令組成自動測試通過；登入畫面待 L4 實測 |
+| AC-16 | 每首歌可下載 320 kbps MP3；舊歌第一次顯示時補轉；轉檔失敗不影響保存（0.2.0 新增） | `test_audio_export.py`（含真實 ffmpeg 轉檔與 ffprobe 檢查） | 自動測試通過；本機瀏覽器實測（替身引擎）；待 L4 實測 |
+| AC-17 | 不勾選 `USE_PASSCODE` 時打開連結即可使用（0.2.0 新增） | `test_notebook_steps.py::test_launch_command_without_passcode_opts_out_explicitly` | 待 L4 實測 |
 | AC-13 | 使用 Drive 重開後恢復 | `test_notebook_steps.py::test_cell_two_drive_mounts_and_uses_drive_folder`（只驗路徑選擇） | 待 L4 實測 |
 | AC-14 | 測試全過、覆蓋率 80% 以上、ruff 零錯誤 | 全部 | 通過：211 個測試、覆蓋率 96%（2026-11-11，本機 Python 3.13）。CI 結果見 GitHub Actions |
 | AC-15 | `colab-baseline.md` 數字完整 | 無 | 待 L4 實測，目前全部為「尚未量測」 |
@@ -64,7 +66,7 @@
 | 下載中斷 | `test_engine.py::test_download_is_retried_three_times_then_reported`、`test_generation_job.py::test_download_retry_is_surfaced_as_a_notice` |
 | 檔案不完整 | `test_edge_cases.py::test_song_with_missing_audio_is_listed_as_incomplete` |
 | 工作逾時 | `test_generation_job.py::test_timeout_stops_the_job` |
-| 分享連結外流 | 由通行碼防護；待 L4 實測（AC-12） |
+| 分享連結外流 | 預設不需登入（使用者決定），連結本身即是存取權；需要分享時勾選 `USE_PASSCODE`（AC-12） |
 | Colab 斷線、runtime 回收 | 無法自動測試；見 `known-issues.md` |
 
 ## 實作與規格的差異
@@ -84,3 +86,6 @@
 | 介面元件 `library_table`、`library_ids_state` | `library_radio` | 見上 |
 | 資料夾 `docs/spec/` | `spec/` | 規格先於 repo 存在，保留原位置 |
 | `gr.Blocks(theme=, css=)`、`show_api=False` | `launch(theme=, css=, footer_links=[])`，事件設 `api_visibility="private"` | Gradio 6 的參數位置不同 |
+| 不做 MP3 轉檔 | 0.2.0 起自動轉出 320 kbps MP3 | 使用者要求（2026-11-12） |
+| 分享連結預設需要通行碼 | 0.2.0 起通行碼為選用，預設關閉 | 使用者要求直接進入（2026-11-12）；連結公開的風險寫在第二格說明與 README |
+| 規格未定義下載按鈕的顯示切換 | MP3 按鈕固定顯示，只切換可用狀態 | 瀏覽器實測時 Gradio 6.17.3 對反覆顯示又隱藏的按鈕，之後的可見度更新不再生效 |

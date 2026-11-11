@@ -135,6 +135,8 @@ RESULT_AUDIO_LABEL = "成品"
 TRUNCATED_NOTICE = "**請留意：** 長度達上限，歌曲可能提前結束。"
 BTN_DOWNLOAD_AUDIO = "下載音訊（FLAC）"
 BTN_PACK = "打包完整產物"
+BTN_DOWNLOAD_MP3 = "下載 MP3"
+MP3_UNAVAILABLE = "MP3 無法使用"
 PACK_LABEL = "完整產物（壓縮檔）"
 RESULT_SCORE_LABEL = "這首歌的樂譜"
 BTN_REMIX = "以此為基礎再做一版"
@@ -223,7 +225,11 @@ UNRELATED_CONFLICTS = (
     "以下是 Colab 預裝套件的相依提醒，與本工具無關，可以忽略。"
     "但同一個執行階段內請不要再使用這些套件（例如 fastai、timm、diffusers）："
 )
-CELL_ONE_FIRST ="請先執行第一格，並確認看到「環境檢查通過」。"
+NO_PASSCODE_WARNING = (
+    "這次不需要登入，打開連結就能使用。連結是公開的：任何拿到連結的人都能用你的運算單元生成歌曲、"
+    "改動你的歌曲庫，請不要分享。需要分享時，請在第二格勾選 USE_PASSCODE 後重新執行第二、三格。"
+)
+CELL_ONE_FIRST = "請先執行第一格，並確認看到「環境檢查通過」。"
 CELL_TWO_FIRST = "請先執行第二格。"
 PASSCODE_NOTICE = "這次的登入帳號是 studio，通行碼是：{passcode}"
 WORKDIR_NOTICE = "歌曲會保存在：{workdir}"

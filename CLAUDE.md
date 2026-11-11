@@ -3,7 +3,7 @@
 - 規格來源：`spec/01-technical-spec.md`。與本檔衝突時以規格為準，並回報衝突。
 - 目標環境只有 Google Colab L4。不加入 T4 相容補丁、不修改 yue2 套件原始碼、不做量化。
 - 只有 `src/yue2_studio/engine.py` 可以 import `yue2`。其他模組一律透過 `Engine` 介面。
-- 只有 `song_store.py`、`draft_store.py`、`event_log.py` 可以寫入工作目錄。
+- 只有 `song_store.py`、`draft_store.py`、`event_log.py` 可以決定寫入工作目錄的位置；`audio_export.py` 只寫入 `song_store.py` 交給它的路徑。
 - `installer.py`、`environment.py`、`notebook_steps.py` 不可 import torch；安裝一律用子行程執行 pip。
 - 上游版本以 commit SHA 釘死在 `requirements-colab.txt`，不可改成分支名稱。升級流程見 `docs/upgrading-yue2.md`。
 - 所有介面字串放在 `ui_text.py`，使用繁體中文，不使用 emoji。

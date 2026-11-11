@@ -300,6 +300,17 @@ class JobRunner:
             peak_vram_gib=outcome.peak_vram_gib,
             versions=self.versions,
         )
+        try:
+            self.store.make_mp3(record.song_id)
+        except Exception as error:
+            # The song is already saved; the MP3 can be made again from the
+            # result or library page, so a failed encode must not fail the job.
+            self.log.write(
+                "mp3_failed",
+                job_id=job.job_id,
+                song_id=record.song_id,
+                detail=f"{type(error).__name__}: {error}"[:300],
+            )
         self._set(state="done", song_id=record.song_id, completed=None, total=None, notice=None)
         self.log.write(
             "job_completed",

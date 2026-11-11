@@ -10,6 +10,7 @@ runtime the notebook installs or downloads the components below.
 | m-a-p/YuE2-Vae weights | Audio decoder | See the model card and upstream `MODEL_LICENSE` | https://huggingface.co/m-a-p/YuE2-Vae |
 | Gradio 6.17.3 | Web interface | Apache-2.0 | https://github.com/gradio-app/gradio |
 | PyTorch 2.10.0 | Installed as a yue2-infer dependency | BSD-3-Clause | https://github.com/pytorch/pytorch |
+| FFmpeg with LAME | MP3 export; called as an external program, preinstalled on Colab, not installed or shipped by this project | LGPL/GPL (depends on the build) | https://ffmpeg.org/legal.html |
 
 yue2-infer brings further dependencies (transformers, huggingface-hub,
 safetensors, tiktoken, numpy, soundfile, accelerate) under their own licenses;

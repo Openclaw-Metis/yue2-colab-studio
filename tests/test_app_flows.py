@@ -304,9 +304,25 @@ def test_bad_title_is_a_warning(studio):
 
 
 def test_unknown_selection_hides_the_detail(studio):
-    assert studio.select_song(None)["detail_group"] == {"visible": False}
     assert studio.select_song("20261111-000000-zzzz")["detail_group"] == {"visible": False}
     assert studio.select_song("../x")["detail_group"] == {"visible": False}
+
+
+def test_a_late_reset_of_the_radio_does_not_close_the_open_song(studio):
+    """Browser finding (2026-11-12): the reset's .change can arrive after the user's pick."""
+    assert studio.select_song(None) == {}
+    assert studio.select_song("") == {}
+
+
+def test_refresh_keeps_the_open_song_open(studio):
+    song = make_song(studio)
+    patch = studio.refresh_library(song.song_id)
+    assert patch["library_radio"]["value"] == song.song_id
+    assert patch["detail_group"] == {"visible": True}
+    studio.store.delete(song.song_id)
+    patch = studio.refresh_library(song.song_id)
+    assert patch["library_radio"]["value"] is None
+    assert patch["detail_group"] == {"visible": False}
 
 
 def test_delete_is_two_steps(studio):

@@ -4,7 +4,7 @@ Importing this package must stay cheap: notebook cell 1 imports it before any
 dependency is installed, so nothing here may import torch, gradio or yue2.
 """
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 # Upstream pins. requirements-colab.txt carries the same YuE commit; the model
 # revisions are the Hugging Face commits that were current on 2026-11-11.

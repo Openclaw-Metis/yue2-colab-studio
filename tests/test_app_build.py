@@ -63,8 +63,11 @@ def _patch_keys():
 
 
 def test_every_patched_name_is_a_real_component():
+    from yue2_studio.studio import MP3_BUTTONS
+
+    names = _patch_keys() | set(MP3_BUTTONS.values())
     source = (SRC / "app.py").read_text(encoding="utf-8")
-    missing = sorted(name for name in _patch_keys() if f'c["{name}"]' not in source)
+    missing = sorted(name for name in names if f'c["{name}"]' not in source)
     assert missing == []
 
 

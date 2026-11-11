@@ -176,7 +176,9 @@ def verify_imports(run: RunCommand = _run_command) -> str:
         "print('torch', torch.__version__);"
         "print('yue2', yue2.__version__);"
         "print('gradio', gradio.__version__);"
-        "print('cuda', torch.cuda.is_available())"
+        "print('cuda', torch.cuda.is_available());"
+        "import shutil;"
+        "print('ffmpeg', shutil.which('ffmpeg') or 'missing (MP3 export unavailable)')"
     )
     result = run([sys.executable, "-c", code])
     if result.returncode != 0:
