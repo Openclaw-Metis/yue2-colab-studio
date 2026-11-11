@@ -86,7 +86,8 @@ def test_html_in_lyrics_is_kept_verbatim():
 
 
 def test_request_round_trips_through_dict():
-    request = validate({"style": "國語抒情", "lyrics": "[Verse]\n霓虹", "seed": 5, "cfg_scale": 1.5})
+    raw = {"style": "國語抒情", "lyrics": "[Verse]\n霓虹", "seed": 5, "cfg_scale": 1.5}
+    request = validate(raw)
     assert StudioRequest.from_dict(request.to_dict()) == request
 
 
