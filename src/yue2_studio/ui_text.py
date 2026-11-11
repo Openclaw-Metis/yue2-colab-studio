@@ -143,8 +143,7 @@ SONG_DONE_TOAST = "歌曲完成"
 # --- Library tab ------------------------------------------------------------
 
 LIBRARY_EMPTY = "還沒有歌曲。做好的歌會出現在這裡。"
-LIBRARY_HEADERS = ["名稱", "建立時間", "長度", "規劃方式", "隨機種子"]
-LIBRARY_PICK = "點選上方清單的任一列來播放與管理。"
+LIBRARY_PICK = "選一首歌來播放與管理"
 BTN_REFRESH = "重新整理清單"
 TITLE_LABEL = "名稱"
 NOTE_LABEL = "備註"

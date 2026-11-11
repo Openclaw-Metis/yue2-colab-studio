@@ -96,7 +96,7 @@ class SongRecord:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(timezone.utc).isoformat(timespec="milliseconds")
 
 
 def _is_truncated(value: Any) -> bool:
@@ -160,7 +160,7 @@ class SongStore:
         try:
             temporary.mkdir(parents=True)
             result.save_artifacts(temporary / "artifacts")
-            stamp = self._now().isoformat(timespec="seconds")
+            stamp = self._now().isoformat(timespec="milliseconds")
             record = SongRecord(
                 song_id=song_id,
                 title=request.style[:DEFAULT_TITLE_CHARS].strip() or song_id,
@@ -235,9 +235,13 @@ class SongStore:
             for path in self.songs_dir.iterdir()
             if path.is_dir() and _SONG_ID.fullmatch(path.name)
         ]
-        # Song ids start with a UTC timestamp, so they order unreadable
-        # records sensibly too.
-        return sorted(records, key=lambda record: record.song_id, reverse=True)
+        # Song ids start with a UTC timestamp to the second, which also places
+        # unreadable records sensibly; created_at breaks ties within a second.
+        return sorted(
+            records,
+            key=lambda record: (record.song_id[:15], record.created_at, record.song_id),
+            reverse=True,
+        )
 
     # --- update, delete, export -------------------------------------------------
 
@@ -257,7 +261,7 @@ class SongStore:
             if len(note) > NOTE_LIMIT:
                 raise InvalidMetadata(ui_text.NOTE_INVALID)
             record.note = note
-        record.updated_at = self._now().isoformat(timespec="seconds")
+        record.updated_at = self._now().isoformat(timespec="milliseconds")
         try:
             self._write_record(self._song_dir(song_id), record)
         except OSError as error:
