@@ -2,6 +2,8 @@
 
 專案代號：`yue2-colab-studio`｜規格日期：2026-11-11｜目標硬體：Google Colab L4
 
+> 本規格寫於實作之前。實作時的調整列在 `docs/acceptance-matrix.md` 的「實作與規格的差異」。
+
 ## 技術規格文件
 
 ### 假設與前提

@@ -84,13 +84,19 @@ notebook_steps.cell_three(REPO_DIR)
 """
 
 
-def markdown(text: str) -> dict:
-    return {"cell_type": "markdown", "metadata": {}, "source": text.splitlines(keepends=True)}
+def markdown(cell_id: str, text: str) -> dict:
+    return {
+        "cell_type": "markdown",
+        "id": cell_id,
+        "metadata": {},
+        "source": text.splitlines(keepends=True),
+    }
 
 
-def code(text: str) -> dict:
+def code(cell_id: str, text: str) -> dict:
     return {
         "cell_type": "code",
+        "id": cell_id,
         "execution_count": None,
         "metadata": {},
         "outputs": [],
@@ -101,13 +107,13 @@ def code(text: str) -> dict:
 def build() -> dict:
     return {
         "cells": [
-            markdown(INTRO),
-            markdown(CELL_ONE_NOTE),
-            code(CELL_ONE),
-            markdown(CELL_TWO_NOTE),
-            code(CELL_TWO),
-            markdown(CELL_THREE_NOTE),
-            code(CELL_THREE),
+            markdown("intro", INTRO),
+            markdown("cell-one-note", CELL_ONE_NOTE),
+            code("cell-one", CELL_ONE),
+            markdown("cell-two-note", CELL_TWO_NOTE),
+            code("cell-two", CELL_TWO),
+            markdown("cell-three-note", CELL_THREE_NOTE),
+            code("cell-three", CELL_THREE),
         ],
         "metadata": {
             "accelerator": "GPU",
